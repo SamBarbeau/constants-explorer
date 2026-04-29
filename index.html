@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Constants · Sam Barbeau</title>
+  <meta name="description" content="An interactive visual tour of mathematical constants." />
+  <style>
+    :root {
+      --bg: #e7e5e4;
+      --ink: #082f49;
+      --accent: #0369a1;
+      --muted: #57534e;
+      --line: #d6d3d1;
+      --card: #f5f4f1;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+      font-family: ui-serif, Georgia, "Times New Roman", serif; font-size: 17px; line-height: 1.6; }
+    a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+    a:hover { border-bottom-color: var(--accent); }
+
+    .wrap { max-width: 980px; margin: 0 auto; padding: 2.5rem 1.25rem 3rem; }
+    header.site { display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 1.25rem; border-bottom: 1px solid var(--line); margin-bottom: 1.75rem; }
+    .brand { color: var(--ink); font-weight: 600; letter-spacing: 0.02em; }
+    .brand:hover { border-bottom-color: transparent; }
+    nav.site a { margin-left: 1.25rem; font-size: 0.95rem; color: var(--muted); }
+    nav.site a:hover, nav.site a.active { color: var(--ink); border-bottom-color: var(--ink); }
+
+    h1 { font-size: 1.6rem; font-weight: 600; margin: 0 0 .5rem; letter-spacing: -0.01em; }
+    .lede { color: var(--muted); margin: 0 0 1.75rem; }
+
+    .picker { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.25rem; }
+    .picker button {
+      background: transparent; border: 1px solid var(--line); color: var(--muted);
+      padding: 0.45rem 0.9rem; border-radius: 999px; cursor: pointer;
+      font: inherit; font-size: 0.92rem; transition: 120ms ease;
+    }
+    .picker button:hover { color: var(--ink); border-color: var(--muted); }
+    .picker button.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+    .picker button .glyph { font-family: "Times New Roman", serif; font-style: italic; margin-right: .35rem; font-size: 1.05em; }
+
+    .layout { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.5rem; align-items: start; }
+    @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
+
+    .stage {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      aspect-ratio: 1 / 1;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    canvas { display: block; width: 100%; height: 100%; }
+
+    .info h2 { font-size: 1.2rem; margin: 0 0 .25rem; font-weight: 600; }
+    .info .value { font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--accent);
+      font-size: 0.95rem; margin-bottom: 1rem; }
+    .info p { margin: 0 0 .9rem; font-size: 0.97rem; }
+
+    .controls { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+    .controls label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: .35rem; }
+    .controls input[type=range] { width: 100%; accent-color: var(--ink); }
+    .controls .row { margin-bottom: .85rem; }
+    .controls .val { font-family: ui-monospace, monospace; color: var(--ink); font-size: 0.85rem; }
+
+    footer.site { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
+      font-size: 0.85rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <a href="https://sambarbeau.com" class="brand">Sam Barbeau</a>
+      <nav class="site">
+        <a href="https://sambarbeau.com">about</a>
+        <a href="https://sambarbeau.com/projects.html" class="active">projects</a>
+        <a href="https://sambarbeau.com/travel.html">travel</a>
+      </nav>
+    </header>
+
+    <main>
+      <h1>constants</h1>
+      <p class="lede">numbers that show up everywhere. pick one, see what it draws.</p>
+
+      <div class="picker" id="picker"></div>
+
+      <div class="layout">
+        <div class="stage"><canvas id="canvas"></canvas></div>
+        <div class="info">
+          <h2 id="name"></h2>
+          <div class="value" id="value"></div>
+          <div id="blurb"></div>
+          <div class="controls">
+            <div class="row">
+              <label>iterations <span class="val" id="n-val"></span></label>
+              <input type="range" id="n" min="50" max="2000" step="10" value="600" />
+            </div>
+            <div class="row">
+              <label>spread <span class="val" id="s-val"></span></label>
+              <input type="range" id="s" min="0.5" max="6" step="0.05" value="2.4" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site">&copy; sam barbeau · <a href="https://github.com/SamBarbeau/constants-explorer">source</a></footer>
+  </div>
+
+  <script>
+    const PHI = (1 + Math.sqrt(5)) / 2;
+    const CONSTANTS = [
+      {
+        key: 'phi', name: 'Golden ratio (φ)', glyph: 'φ',
+        value: PHI, valueStr: '1.6180339887…',
+        blurb: 'φ = (1+√5)/2. The unique number where φ² = φ+1. Show up wherever a thing grows by adding the previous step — sunflowers, pinecones, your knuckles. Plotted here as a sunflower spiral with golden-angle spacing (the most "irrational" possible angle, so points pack tightly).',
+        draw: phyllotaxis(2 * Math.PI / (PHI * PHI))
+      },
+      {
+        key: 'pi', name: 'Pi (π)', glyph: 'π',
+        value: Math.PI, valueStr: '3.1415926535…',
+        blurb: 'Ratio of a circle\'s circumference to its diameter. Irrational and transcendental. Drawn here as a Lissajous figure with frequency ratio (3 : π·spread): a curve that almost-but-never closes because π is irrational.',
+        draw: lissajous(3, n => Math.PI * 0.7)
+      },
+      {
+        key: 'e', name: 'Euler\'s number (e)', glyph: 'e',
+        value: Math.E, valueStr: '2.7182818284…',
+        blurb: 'The base of natural growth. limₙ→∞ (1 + 1/n)ⁿ. Shows up wherever something grows continuously — interest, populations, decay. Drawn here as a logarithmic spiral r = e^(b·θ): every quarter-turn the radius scales by the same factor.',
+        draw: logSpiral()
+      },
+      {
+        key: 'sqrt2', name: '√2', glyph: '√2',
+        value: Math.SQRT2, valueStr: '1.4142135623…',
+        blurb: 'The diagonal of a unit square. The first number proved irrational (~5th c. BC, allegedly costing Hippasus his life). Drawn here as a phyllotaxis using 2π/√2 as the divergence angle — produces a strikingly different packing than φ.',
+        draw: phyllotaxis(2 * Math.PI / Math.SQRT2)
+      },
+      {
+        key: 'silver', name: 'Silver ratio (δ_S)', glyph: 'δₛ',
+        value: 1 + Math.SQRT2, valueStr: '2.4142135623…',
+        blurb: 'φ\'s lesser-known cousin. δₛ = 1+√2, satisfying δₛ² = 2δₛ+1. Governs octagonal tilings and "Pell" growth (where each step is twice the previous plus the one before). Drawn as phyllotaxis with 2π/δₛ.',
+        draw: phyllotaxis(2 * Math.PI / (1 + Math.SQRT2))
+      },
+      {
+        key: 'tau', name: 'Tau (τ)', glyph: 'τ',
+        value: 2 * Math.PI, valueStr: '6.2831853071…',
+        blurb: 'τ = 2π — a full turn around a circle, instead of half. Argued by some (Vi Hart, Michael Hartl) to be the more natural circle constant. Drawn here as a rose curve r = cos(τ·k·θ) — where τ shows up cleanly as "one full revolution".',
+        draw: rose()
+      },
+      {
+        key: 'gamma', name: 'Euler–Mascheroni (γ)', glyph: 'γ',
+        value: 0.5772156649, valueStr: '0.5772156649…',
+        blurb: 'γ = lim (1 + 1/2 + 1/3 + … + 1/n − ln n). Connects the harmonic series to the natural log. Nobody knows if it\'s rational. Drawn here as the running gap between the harmonic sum Hₙ and ln(n) — converging visibly to γ.',
+        draw: gammaCurve()
+      },
+    ];
+
+    // ─────────────── Drawers ───────────────
+    function phyllotaxis(angle) {
+      return (ctx, w, h, n, spread) => {
+        ctx.save();
+        ctx.translate(w/2, h/2);
+        const c = Math.min(w, h) * 0.4;
+        for (let i = 0; i < n; i++) {
+          const r = c * Math.sqrt(i / n) * (spread / 2.4);
+          const a = i * angle;
+          const x = r * Math.cos(a), y = r * Math.sin(a);
+          const t = i / n;
+          ctx.fillStyle = `rgb(${8 + t*5}, ${47 + t*60}, ${73 + t*100})`;
+          const sz = 2 + (1 - t) * 1.5;
+          ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.restore();
+      };
+    }
+    function lissajous(a, bFn) {
+      return (ctx, w, h, n, spread) => {
+        const cx = w/2, cy = h/2, R = Math.min(w,h)*0.42;
+        const b = bFn() * (spread / 2.4);
+        ctx.beginPath();
+        ctx.strokeStyle = '#082f49';
+        ctx.lineWidth = 1.1;
+        for (let i = 0; i <= n; i++) {
+          const t = (i / n) * Math.PI * 8;
+          const x = cx + R * Math.sin(a * t);
+          const y = cy + R * Math.sin(b * t + Math.PI/3);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      };
+    }
+    function logSpiral() {
+      return (ctx, w, h, n, spread) => {
+        const cx = w/2, cy = h/2;
+        const b = Math.log(PHI) / (Math.PI/2);
+        ctx.beginPath();
+        ctx.strokeStyle = '#0369a1';
+        ctx.lineWidth = 1.4;
+        const turns = spread;
+        for (let i = 0; i <= n; i++) {
+          const t = (i / n) * turns * Math.PI * 2 - turns * Math.PI;
+          const r = Math.exp(b * t * 0.35) * 1.2;
+          const x = cx + r * Math.cos(t);
+          const y = cy + r * Math.sin(t);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      };
+    }
+    function rose() {
+      return (ctx, w, h, n, spread) => {
+        const cx = w/2, cy = h/2, R = Math.min(w,h)*0.42;
+        const k = Math.max(2, Math.round(spread * 1.5)); // petals
+        ctx.beginPath();
+        ctx.strokeStyle = '#082f49';
+        ctx.lineWidth = 1.2;
+        for (let i = 0; i <= n; i++) {
+          const t = (i / n) * Math.PI * 2;
+          const r = R * Math.cos(k * t);
+          const x = cx + r * Math.cos(t);
+          const y = cy + r * Math.sin(t);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      };
+    }
+    function gammaCurve() {
+      return (ctx, w, h, n, spread) => {
+        const m = Math.max(20, Math.round(n * 0.5));
+        const padL = 50, padR = 20, padT = 30, padB = 40;
+        const plotW = w - padL - padR, plotH = h - padT - padB;
+        // y range ~ 0.5 to 1.0 (γ is in this range)
+        const yMin = 0.5, yMax = 1.05;
+        const yPx = v => padT + plotH * (1 - (v - yMin)/(yMax - yMin));
+        const xPx = i => padL + (i / m) * plotW;
+
+        // axes
+        ctx.strokeStyle = '#d6d3d1'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, h - padB); ctx.lineTo(w - padR, h - padB); ctx.stroke();
+        // gamma reference
+        ctx.strokeStyle = '#0369a1'; ctx.setLineDash([4,4]);
+        ctx.beginPath(); ctx.moveTo(padL, yPx(0.5772156649)); ctx.lineTo(w - padR, yPx(0.5772156649)); ctx.stroke();
+        ctx.setLineDash([]);
+        // labels
+        ctx.fillStyle = '#57534e'; ctx.font = '12px ui-monospace,monospace';
+        ctx.fillText('γ ≈ 0.5772', w - padR - 70, yPx(0.5772156649) - 6);
+        ctx.fillText('n', w - padR - 12, h - padB + 18);
+        ctx.fillText('Hₙ − ln n', padL - 36, padT - 8);
+
+        // sequence Hn - ln(n)
+        ctx.strokeStyle = '#082f49'; ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        let H = 0;
+        for (let i = 1; i <= m; i++) {
+          H += 1/i;
+          const v = H - Math.log(i);
+          const x = xPx(i), y = yPx(v);
+          if (i === 1) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      };
+    }
+
+    // ─────────────── App ───────────────
+    const picker = document.getElementById('picker');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const nSlider = document.getElementById('n');
+    const sSlider = document.getElementById('s');
+
+    let active = CONSTANTS[0];
+
+    CONSTANTS.forEach((c, i) => {
+      const b = document.createElement('button');
+      b.innerHTML = `<span class="glyph">${c.glyph}</span>${c.name.replace(/\s*\(.*\)/, '')}`;
+      b.onclick = () => select(c);
+      b.dataset.key = c.key;
+      picker.appendChild(b);
+    });
+
+    function select(c) {
+      active = c;
+      document.querySelectorAll('#picker button').forEach(b =>
+        b.classList.toggle('active', b.dataset.key === c.key));
+      document.getElementById('name').textContent = c.name;
+      document.getElementById('value').textContent = c.valueStr;
+      document.getElementById('blurb').innerHTML = `<p>${c.blurb}</p>`;
+      render();
+    }
+
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      const r = canvas.getBoundingClientRect();
+      canvas.width = r.width * dpr;
+      canvas.height = r.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      render();
+    }
+
+    function render() {
+      const r = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, r.width, r.height);
+      const n = parseInt(nSlider.value);
+      const s = parseFloat(sSlider.value);
+      document.getElementById('n-val').textContent = n;
+      document.getElementById('s-val').textContent = s.toFixed(2);
+      active.draw(ctx, r.width, r.height, n, s);
+    }
+
+    nSlider.oninput = render;
+    sSlider.oninput = render;
+    window.addEventListener('resize', resize);
+
+    select(CONSTANTS[0]);
+    resize();
+  </script>
+</body>
+</html>
