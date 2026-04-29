@@ -59,12 +59,26 @@
     .info .value { font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--accent);
       font-size: 0.95rem; margin-bottom: 1rem; }
     .info p { margin: 0 0 .9rem; font-size: 0.97rem; }
+    .info .approx {
+      background: var(--card); border: 1px solid var(--line); border-radius: 4px;
+      padding: 0.6rem 0.8rem; font-family: ui-monospace, monospace;
+      font-size: 0.92rem; margin-bottom: 1rem;
+    }
+    .info .approx .label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .info .approx .num { color: var(--ink); font-size: 1.1rem; font-weight: 600; }
 
     .controls { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
     .controls label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: .35rem; }
     .controls input[type=range] { width: 100%; accent-color: var(--ink); }
     .controls .row { margin-bottom: .85rem; }
     .controls .val { font-family: ui-monospace, monospace; color: var(--ink); font-size: 0.85rem; }
+    .controls .hint { font-size: 0.78rem; color: var(--muted); margin-top: .25rem; }
+    .controls button.tiny {
+      background: transparent; border: 1px solid var(--line); color: var(--muted);
+      font: inherit; font-size: 0.8rem; padding: 0.2rem 0.55rem; border-radius: 3px;
+      cursor: pointer; margin-right: 0.3rem;
+    }
+    .controls button.tiny:hover { color: var(--ink); border-color: var(--muted); }
 
     footer.site { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
       font-size: 0.85rem; color: var(--muted); }
@@ -83,7 +97,7 @@
 
     <main>
       <h1>constants</h1>
-      <p class="lede">numbers that show up everywhere. pick one, see what it draws.</p>
+      <p class="lede">six famous numbers, each with a visual that builds intuition for where it comes from.</p>
 
       <div class="picker" id="picker"></div>
 
@@ -92,17 +106,9 @@
         <div class="info">
           <h2 id="name"></h2>
           <div class="value" id="value"></div>
+          <div id="approx-wrap"></div>
           <div id="blurb"></div>
-          <div class="controls">
-            <div class="row">
-              <label>iterations <span class="val" id="n-val"></span></label>
-              <input type="range" id="n" min="50" max="2000" step="10" value="600" />
-            </div>
-            <div class="row">
-              <label>spread <span class="val" id="s-val"></span></label>
-              <input type="range" id="s" min="0.5" max="6" step="0.05" value="2.4" />
-            </div>
-          </div>
+          <div class="controls" id="controls"></div>
         </div>
       </div>
     </main>
@@ -111,168 +117,366 @@
   </div>
 
   <script>
+    'use strict';
     const PHI = (1 + Math.sqrt(5)) / 2;
+    const GOLDEN_DEG = 360 / (PHI * PHI);   // ≈ 137.5077°
+
+    const INK = '#082f49';
+    const ACCENT = '#0369a1';
+    const MUTED = '#57534e';
+    const LINE = '#d6d3d1';
+
+    // ──────────────────────────────────────────
+    // Each constant defines its own state, controls, draw fn, and approx readout.
+    // ──────────────────────────────────────────
+
     const CONSTANTS = [
+      // ── φ : phyllotaxis with a tunable angle ──
       {
-        key: 'phi', name: 'Golden ratio (φ)', glyph: 'φ',
+        key: 'phi', glyph: 'φ', name: 'Golden ratio (φ)',
         value: PHI, valueStr: '1.6180339887…',
-        blurb: 'φ = (1+√5)/2. The unique number where φ² = φ+1. Show up wherever a thing grows by adding the previous step — sunflowers, pinecones, your knuckles. Plotted here as a sunflower spiral with golden-angle spacing (the most "irrational" possible angle, so points pack tightly).',
-        draw: phyllotaxis(2 * Math.PI / (PHI * PHI))
+        blurb: 'Plants pack seeds by rotating each new one a fixed angle from the last. Drag the angle slider — only at exactly the golden angle (≈137.508°) do the seeds pack uniformly. Move it even half a degree away and you suddenly see spirals, gaps, or rays. φ is the unique number that makes this happen.',
+        state: { angle: GOLDEN_DEG },
+        controls: [{
+          key: 'angle', label: 'divergence angle', min: 130, max: 145, step: 0.05, default: GOLDEN_DEG,
+          format: v => v.toFixed(3) + '°',
+          presets: [{ label: 'golden', val: GOLDEN_DEG }, { label: '137°', val: 137 }, { label: '138°', val: 138 }, { label: '90°', val: 90 }],
+          hint: 'try landing exactly on golden — and then nudge it'
+        }],
+        approx: () => null,
+        draw: (ctx, w, h, s) => {
+          ctx.save();
+          ctx.translate(w/2, h/2);
+          const c = Math.min(w, h) * 0.42;
+          const n = 600;
+          const ang = s.angle * Math.PI / 180;
+          for (let i = 0; i < n; i++) {
+            const r = c * Math.sqrt(i / n);
+            const a = i * ang;
+            const x = r * Math.cos(a), y = r * Math.sin(a);
+            const t = i / n;
+            ctx.fillStyle = `rgb(${8 + t*5}, ${47 + t*60}, ${73 + t*100})`;
+            ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI*2); ctx.fill();
+          }
+          ctx.restore();
+        }
       },
+
+      // ── π : polygon approximation of a circle ──
       {
-        key: 'pi', name: 'Pi (π)', glyph: 'π',
+        key: 'pi', glyph: 'π', name: 'Pi (π)',
         value: Math.PI, valueStr: '3.1415926535…',
-        blurb: 'Ratio of a circle\'s circumference to its diameter. Irrational and transcendental. Drawn here as a Lissajous figure with frequency ratio (3 : π·spread): a curve that almost-but-never closes because π is irrational.',
-        draw: lissajous(3, n => Math.PI * 0.7)
+        blurb: 'Archimedes\' trick: inscribe a regular N-sided polygon in a unit circle. As N grows, the polygon\'s perimeter divided by 2 approaches π. The slider lets you watch the convergence — by N≈30 you\'re already at three decimals.',
+        state: { sides: 6 },
+        controls: [{
+          key: 'sides', label: 'number of sides', min: 3, max: 200, step: 1, default: 6,
+          format: v => Math.round(v) + ' sides',
+          presets: [{ label: '6', val: 6 }, { label: '12', val: 12 }, { label: '50', val: 50 }, { label: '200', val: 200 }],
+          hint: 'perimeter ÷ 2 → π'
+        }],
+        approx: s => {
+          const N = Math.round(s.sides);
+          const perim = N * Math.sin(Math.PI / N) * 2;
+          return { label: `inscribed-polygon estimate (N=${N})`, num: (perim/2).toFixed(7) };
+        },
+        draw: (ctx, w, h, s) => {
+          const cx = w/2, cy = h/2, R = Math.min(w,h) * 0.38;
+          // unit circle
+          ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.stroke();
+          // polygon
+          const N = Math.round(s.sides);
+          ctx.strokeStyle = INK; ctx.lineWidth = 1.6;
+          ctx.fillStyle = 'rgba(3, 105, 161, 0.10)';
+          ctx.beginPath();
+          for (let i = 0; i <= N; i++) {
+            const a = -Math.PI/2 + (i / N) * Math.PI * 2;
+            const x = cx + R * Math.cos(a), y = cy + R * Math.sin(a);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.closePath(); ctx.fill(); ctx.stroke();
+          // vertices
+          ctx.fillStyle = ACCENT;
+          for (let i = 0; i < N; i++) {
+            const a = -Math.PI/2 + (i / N) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.arc(cx + R * Math.cos(a), cy + R * Math.sin(a), N > 60 ? 1.2 : 2.2, 0, Math.PI*2);
+            ctx.fill();
+          }
+        }
       },
+
+      // ── e : area under 1/x ──
       {
-        key: 'e', name: 'Euler\'s number (e)', glyph: 'e',
+        key: 'e', glyph: 'e', name: 'Euler\'s number (e)',
         value: Math.E, valueStr: '2.7182818284…',
-        blurb: 'The base of natural growth. limₙ→∞ (1 + 1/n)ⁿ. Shows up wherever something grows continuously — interest, populations, decay. Drawn here as a logarithmic spiral r = e^(b·θ): every quarter-turn the radius scales by the same factor.',
-        draw: logSpiral()
+        blurb: 'Define ln(x) as the area under y = 1/x from 1 to x. Then e is the unique number where that area equals exactly 1. Move the slider — when the shaded area hits 1.000, you\'re standing at e.',
+        state: { x: 2 },
+        controls: [{
+          key: 'x', label: 'right edge x', min: 1.01, max: 5, step: 0.01, default: 2,
+          format: v => 'x = ' + v.toFixed(3),
+          presets: [{ label: '2', val: 2 }, { label: 'e', val: Math.E }, { label: '3', val: 3 }],
+          hint: 'find the x where the area = 1'
+        }],
+        approx: s => {
+          // ln(x) is the area; show it
+          return { label: 'shaded area = ln(x)', num: Math.log(s.x).toFixed(6) };
+        },
+        draw: (ctx, w, h, s) => {
+          const padL = 50, padR = 25, padT = 25, padB = 45;
+          const plotW = w - padL - padR, plotH = h - padT - padB;
+          const xMin = 0, xMax = 5;
+          const yMin = 0, yMax = 1.2;
+          const X = x => padL + (x - xMin) / (xMax - xMin) * plotW;
+          const Y = y => padT + plotH * (1 - (y - yMin) / (yMax - yMin));
+
+          // axes
+          ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(padL, padT); ctx.lineTo(padL, h - padB); ctx.lineTo(w - padR, h - padB); ctx.stroke();
+
+          // gridlines and labels
+          ctx.fillStyle = MUTED; ctx.font = '11px ui-monospace, monospace';
+          for (let xv = 1; xv <= 5; xv++) {
+            ctx.fillText(xv, X(xv) - 3, h - padB + 14);
+            ctx.strokeStyle = '#e5e3e1';
+            ctx.beginPath(); ctx.moveTo(X(xv), padT); ctx.lineTo(X(xv), h - padB); ctx.stroke();
+          }
+          // mark e on x-axis
+          ctx.fillStyle = ACCENT;
+          ctx.fillText('e', X(Math.E) - 3, h - padB + 28);
+          ctx.strokeStyle = ACCENT; ctx.setLineDash([3,3]);
+          ctx.beginPath(); ctx.moveTo(X(Math.E), padT); ctx.lineTo(X(Math.E), h - padB); ctx.stroke();
+          ctx.setLineDash([]);
+
+          // shaded area from 1 to x of 1/t
+          const xR = Math.max(1.001, s.x);
+          ctx.fillStyle = 'rgba(3, 105, 161, 0.18)';
+          ctx.beginPath();
+          ctx.moveTo(X(1), Y(0));
+          for (let xv = 1; xv <= xR; xv += 0.01) ctx.lineTo(X(xv), Y(1 / xv));
+          ctx.lineTo(X(xR), Y(0));
+          ctx.closePath();
+          ctx.fill();
+
+          // 1/x curve
+          ctx.strokeStyle = INK; ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          for (let xv = 0.2; xv <= 5; xv += 0.02) {
+            const px = X(xv), py = Y(Math.min(1.2, 1/xv));
+            if (xv === 0.2) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+
+          // label y = 1/x
+          ctx.fillStyle = MUTED; ctx.font = '12px ui-serif, serif';
+          ctx.fillText('y = 1/x', X(3.7), Y(0.42));
+        }
       },
+
+      // ── √2 : spiral of Theodorus ──
       {
-        key: 'sqrt2', name: '√2', glyph: '√2',
+        key: 'sqrt2', glyph: '√2', name: 'Square root of two',
         value: Math.SQRT2, valueStr: '1.4142135623…',
-        blurb: 'The diagonal of a unit square. The first number proved irrational (~5th c. BC, allegedly costing Hippasus his life). Drawn here as a phyllotaxis using 2π/√2 as the divergence angle — produces a strikingly different packing than φ.',
-        draw: phyllotaxis(2 * Math.PI / Math.SQRT2)
+        blurb: 'The diagonal of a unit square is √2 — the very first number proved irrational (≈5th c. BC). The spiral of Theodorus chains right triangles together: each new hypotenuse is √(n+1). The first one is √2.',
+        state: { n: 16 },
+        controls: [{
+          key: 'n', label: 'triangles', min: 1, max: 30, step: 1, default: 16,
+          format: v => Math.round(v) + ' triangles',
+          presets: [{ label: '1', val: 1 }, { label: '5', val: 5 }, { label: '16', val: 16 }, { label: '30', val: 30 }],
+          hint: 'each hypotenuse is √(n+1)'
+        }],
+        approx: () => ({ label: 'first hypotenuse', num: '√2 ≈ 1.4142136' }),
+        draw: (ctx, w, h, s) => {
+          const cx = w/2, cy = h/2 + 30;
+          const scale = Math.min(w, h) / 14;
+          let angle = 0;
+          let r = 1;
+          let prevX = cx + scale, prevY = cy;
+          // anchor segment along x-axis (length 1)
+          ctx.strokeStyle = INK; ctx.lineWidth = 1.4;
+          ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(prevX, prevY); ctx.stroke();
+          ctx.fillStyle = MUTED; ctx.font = '11px ui-monospace, monospace';
+          ctx.fillText('1', cx + scale/2 - 3, cy + 14);
+
+          const N = Math.round(s.n);
+          for (let i = 1; i <= N; i++) {
+            const dAngle = Math.atan2(1, r); // right angle leg of length 1
+            const newAngle = angle + dAngle;
+            const newR = Math.sqrt(r*r + 1);
+            const nx = cx + newR * scale * Math.cos(newAngle);
+            const ny = cy - newR * scale * Math.sin(newAngle);
+            // perpendicular leg (length 1)
+            ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(prevX, prevY); ctx.lineTo(nx, ny); ctx.stroke();
+            // new hypotenuse (from origin)
+            ctx.strokeStyle = (i === 1) ? ACCENT : INK;
+            ctx.lineWidth = (i === 1) ? 2 : 1.2;
+            ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(nx, ny); ctx.stroke();
+            // label first few hypotenuse lengths
+            if (i <= 4) {
+              ctx.fillStyle = (i === 1) ? ACCENT : MUTED;
+              const mx = cx + (nx - cx) * 0.55;
+              const my = cy + (ny - cy) * 0.55;
+              ctx.fillText('√' + (i+1), mx + 4, my - 4);
+            }
+            prevX = nx; prevY = ny;
+            angle = newAngle;
+            r = newR;
+          }
+          // dot at origin
+          ctx.fillStyle = INK;
+          ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI*2); ctx.fill();
+        }
       },
+
+      // ── τ : circle unrolling ──
       {
-        key: 'silver', name: 'Silver ratio (δ_S)', glyph: 'δₛ',
-        value: 1 + Math.SQRT2, valueStr: '2.4142135623…',
-        blurb: 'φ\'s lesser-known cousin. δₛ = 1+√2, satisfying δₛ² = 2δₛ+1. Governs octagonal tilings and "Pell" growth (where each step is twice the previous plus the one before). Drawn as phyllotaxis with 2π/δₛ.',
-        draw: phyllotaxis(2 * Math.PI / (1 + Math.SQRT2))
-      },
-      {
-        key: 'tau', name: 'Tau (τ)', glyph: 'τ',
+        key: 'tau', glyph: 'τ', name: 'Tau (τ = 2π)',
         value: 2 * Math.PI, valueStr: '6.2831853071…',
-        blurb: 'τ = 2π — a full turn around a circle, instead of half. Argued by some (Vi Hart, Michael Hartl) to be the more natural circle constant. Drawn here as a rose curve r = cos(τ·k·θ) — where τ shows up cleanly as "one full revolution".',
-        draw: rose()
+        blurb: 'τ = 2π is one full turn around a circle. Roll a unit circle along a line and the distance covered after one revolution is exactly τ. Move the slider to roll the circle — the trail it leaves is the unrolled circumference.',
+        state: { t: 0.5 },
+        controls: [{
+          key: 't', label: 'roll progress', min: 0, max: 1, step: 0.001, default: 0.5,
+          format: v => (v * 100).toFixed(1) + '%',
+          presets: [{ label: 'start', val: 0 }, { label: '¼ turn', val: 0.25 }, { label: 'full', val: 1 }],
+          hint: 'one full roll = τ'
+        }],
+        approx: s => ({ label: 'distance rolled (units of r)', num: (s.t * 2 * Math.PI).toFixed(6) }),
+        draw: (ctx, w, h, s) => {
+          const padL = 30, padR = 30, padB = 70;
+          const R = Math.min((h - 100), (w - padL - padR) / (2 * Math.PI + 1)) * 0.45;
+          const baselineY = h - padB;
+          const distance = s.t * 2 * Math.PI * R;
+          const cx = padL + R + distance;
+          const cy = baselineY - R;
+          // baseline
+          ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(padL, baselineY); ctx.lineTo(padL + R + 2 * Math.PI * R + 20, baselineY); ctx.stroke();
+          // tick marks at multiples of πR
+          ctx.fillStyle = MUTED; ctx.font = '11px ui-monospace, monospace';
+          [0, 0.5, 1, 1.5, 2].forEach(k => {
+            const x = padL + R + k * Math.PI * R;
+            ctx.strokeStyle = LINE;
+            ctx.beginPath(); ctx.moveTo(x, baselineY); ctx.lineTo(x, baselineY + 5); ctx.stroke();
+            const label = k === 0 ? '0' : (k === 0.5 ? 'πr/2' : k === 1 ? 'πr' : k === 1.5 ? '3πr/2' : 'τr');
+            ctx.fillText(label, x - 12, baselineY + 18);
+          });
+          // trail (unrolled length)
+          ctx.strokeStyle = ACCENT; ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(padL + R, baselineY);
+          ctx.lineTo(padL + R + distance, baselineY);
+          ctx.stroke();
+          // circle
+          ctx.strokeStyle = INK; ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.stroke();
+          // contact-point marker on circle
+          const markerAngle = -Math.PI/2 + s.t * 2 * Math.PI;
+          const mx = cx + R * Math.cos(markerAngle);
+          const my = cy + R * Math.sin(markerAngle);
+          ctx.fillStyle = ACCENT;
+          ctx.beginPath(); ctx.arc(mx, my, 4, 0, Math.PI*2); ctx.fill();
+          // radius line
+          ctx.strokeStyle = MUTED; ctx.setLineDash([3,3]); ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(mx, my); ctx.stroke();
+          ctx.setLineDash([]);
+          // label r
+          ctx.fillStyle = MUTED; ctx.font = '12px ui-serif, serif';
+          ctx.fillText('r', cx + 6, cy - 4);
+        }
       },
+
+      // ── γ : harmonic sum vs ln(n) ──
       {
-        key: 'gamma', name: 'Euler–Mascheroni (γ)', glyph: 'γ',
+        key: 'gamma', glyph: 'γ', name: 'Euler–Mascheroni (γ)',
         value: 0.5772156649, valueStr: '0.5772156649…',
-        blurb: 'γ = lim (1 + 1/2 + 1/3 + … + 1/n − ln n). Connects the harmonic series to the natural log. Nobody knows if it\'s rational. Drawn here as the running gap between the harmonic sum Hₙ and ln(n) — converging visibly to γ.',
-        draw: gammaCurve()
+        blurb: 'The harmonic sum 1 + 1/2 + 1/3 + … and the natural log ln(n) both grow without bound — but their gap converges to a constant. That constant is γ. Move the slider to add more terms; the dashed line is ln(n), the staircase is the harmonic sum, and the gap settles in to ≈0.577.',
+        state: { n: 30 },
+        controls: [{
+          key: 'n', label: 'terms (n)', min: 2, max: 200, step: 1, default: 30,
+          format: v => 'n = ' + Math.round(v),
+          presets: [{ label: '5', val: 5 }, { label: '30', val: 30 }, { label: '200', val: 200 }],
+          hint: 'gap = Hₙ − ln(n) → γ'
+        }],
+        approx: s => {
+          const N = Math.round(s.n);
+          let H = 0;
+          for (let i = 1; i <= N; i++) H += 1/i;
+          const gap = H - Math.log(N);
+          return { label: `Hₙ − ln(n) at n=${N}`, num: gap.toFixed(6) };
+        },
+        draw: (ctx, w, h, s) => {
+          const N = Math.round(s.n);
+          const padL = 50, padR = 25, padT = 25, padB = 40;
+          const plotW = w - padL - padR, plotH = h - padT - padB;
+          // y range: max of Hn at current N
+          let H = 0; for (let i = 1; i <= N; i++) H += 1/i;
+          const yMax = Math.max(2, H * 1.05);
+          const X = i => padL + (i / N) * plotW;
+          const Y = v => padT + plotH * (1 - v / yMax);
+          // axes
+          ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(padL, padT); ctx.lineTo(padL, h - padB); ctx.lineTo(w - padR, h - padB); ctx.stroke();
+          // y gridlines at integers
+          ctx.fillStyle = MUTED; ctx.font = '11px ui-monospace, monospace';
+          for (let yv = 0; yv <= yMax; yv++) {
+            ctx.strokeStyle = '#e5e3e1';
+            ctx.beginPath(); ctx.moveTo(padL, Y(yv)); ctx.lineTo(w - padR, Y(yv)); ctx.stroke();
+            ctx.fillStyle = MUTED; ctx.fillText(yv, padL - 18, Y(yv) + 3);
+          }
+          // ln(n) curve (dashed)
+          ctx.strokeStyle = ACCENT; ctx.lineWidth = 1.4; ctx.setLineDash([4,4]);
+          ctx.beginPath();
+          for (let i = 1; i <= N; i += Math.max(1, Math.floor(N/200))) {
+            const px = X(i), py = Y(Math.log(i));
+            if (i === 1) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+          // harmonic staircase
+          ctx.strokeStyle = INK; ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          let runH = 0;
+          for (let i = 1; i <= N; i++) {
+            runH += 1/i;
+            const px0 = X(i - 1), px1 = X(i), py = Y(runH);
+            if (i === 1) ctx.moveTo(px0, Y(0)); else ctx.lineTo(px0, py);
+            ctx.lineTo(px1, py);
+          }
+          ctx.stroke();
+          // shade gap at right edge
+          const lnN = Math.log(N);
+          ctx.strokeStyle = '#b91c1c'; ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(X(N), Y(lnN)); ctx.lineTo(X(N), Y(H));
+          ctx.stroke();
+          // labels
+          ctx.fillStyle = ACCENT; ctx.font = '12px ui-serif, serif';
+          ctx.fillText('ln(n)', X(N) - 36, Y(lnN) + 14);
+          ctx.fillStyle = INK;
+          ctx.fillText('Hₙ', X(N) - 22, Y(H) - 6);
+          ctx.fillStyle = '#b91c1c'; ctx.font = '11px ui-monospace, monospace';
+          const gap = H - lnN;
+          ctx.fillText('gap ≈ ' + gap.toFixed(4), X(N) + 4, (Y(lnN) + Y(H)) / 2);
+          ctx.fillStyle = MUTED;
+          ctx.fillText('n', w - padR - 8, h - padB + 16);
+        }
       },
     ];
 
-    // ─────────────── Drawers ───────────────
-    function phyllotaxis(angle) {
-      return (ctx, w, h, n, spread) => {
-        ctx.save();
-        ctx.translate(w/2, h/2);
-        const c = Math.min(w, h) * 0.4;
-        for (let i = 0; i < n; i++) {
-          const r = c * Math.sqrt(i / n) * (spread / 2.4);
-          const a = i * angle;
-          const x = r * Math.cos(a), y = r * Math.sin(a);
-          const t = i / n;
-          ctx.fillStyle = `rgb(${8 + t*5}, ${47 + t*60}, ${73 + t*100})`;
-          const sz = 2 + (1 - t) * 1.5;
-          ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI*2); ctx.fill();
-        }
-        ctx.restore();
-      };
-    }
-    function lissajous(a, bFn) {
-      return (ctx, w, h, n, spread) => {
-        const cx = w/2, cy = h/2, R = Math.min(w,h)*0.42;
-        const b = bFn() * (spread / 2.4);
-        ctx.beginPath();
-        ctx.strokeStyle = '#082f49';
-        ctx.lineWidth = 1.1;
-        for (let i = 0; i <= n; i++) {
-          const t = (i / n) * Math.PI * 8;
-          const x = cx + R * Math.sin(a * t);
-          const y = cy + R * Math.sin(b * t + Math.PI/3);
-          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      };
-    }
-    function logSpiral() {
-      return (ctx, w, h, n, spread) => {
-        const cx = w/2, cy = h/2;
-        const b = Math.log(PHI) / (Math.PI/2);
-        ctx.beginPath();
-        ctx.strokeStyle = '#0369a1';
-        ctx.lineWidth = 1.4;
-        const turns = spread;
-        for (let i = 0; i <= n; i++) {
-          const t = (i / n) * turns * Math.PI * 2 - turns * Math.PI;
-          const r = Math.exp(b * t * 0.35) * 1.2;
-          const x = cx + r * Math.cos(t);
-          const y = cy + r * Math.sin(t);
-          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      };
-    }
-    function rose() {
-      return (ctx, w, h, n, spread) => {
-        const cx = w/2, cy = h/2, R = Math.min(w,h)*0.42;
-        const k = Math.max(2, Math.round(spread * 1.5)); // petals
-        ctx.beginPath();
-        ctx.strokeStyle = '#082f49';
-        ctx.lineWidth = 1.2;
-        for (let i = 0; i <= n; i++) {
-          const t = (i / n) * Math.PI * 2;
-          const r = R * Math.cos(k * t);
-          const x = cx + r * Math.cos(t);
-          const y = cy + r * Math.sin(t);
-          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      };
-    }
-    function gammaCurve() {
-      return (ctx, w, h, n, spread) => {
-        const m = Math.max(20, Math.round(n * 0.5));
-        const padL = 50, padR = 20, padT = 30, padB = 40;
-        const plotW = w - padL - padR, plotH = h - padT - padB;
-        // y range ~ 0.5 to 1.0 (γ is in this range)
-        const yMin = 0.5, yMax = 1.05;
-        const yPx = v => padT + plotH * (1 - (v - yMin)/(yMax - yMin));
-        const xPx = i => padL + (i / m) * plotW;
-
-        // axes
-        ctx.strokeStyle = '#d6d3d1'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, h - padB); ctx.lineTo(w - padR, h - padB); ctx.stroke();
-        // gamma reference
-        ctx.strokeStyle = '#0369a1'; ctx.setLineDash([4,4]);
-        ctx.beginPath(); ctx.moveTo(padL, yPx(0.5772156649)); ctx.lineTo(w - padR, yPx(0.5772156649)); ctx.stroke();
-        ctx.setLineDash([]);
-        // labels
-        ctx.fillStyle = '#57534e'; ctx.font = '12px ui-monospace,monospace';
-        ctx.fillText('γ ≈ 0.5772', w - padR - 70, yPx(0.5772156649) - 6);
-        ctx.fillText('n', w - padR - 12, h - padB + 18);
-        ctx.fillText('Hₙ − ln n', padL - 36, padT - 8);
-
-        // sequence Hn - ln(n)
-        ctx.strokeStyle = '#082f49'; ctx.lineWidth = 1.4;
-        ctx.beginPath();
-        let H = 0;
-        for (let i = 1; i <= m; i++) {
-          H += 1/i;
-          const v = H - Math.log(i);
-          const x = xPx(i), y = yPx(v);
-          if (i === 1) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      };
-    }
-
     // ─────────────── App ───────────────
-    const picker = document.getElementById('picker');
-    const canvas = document.getElementById('canvas');
+    const $ = id => document.getElementById(id);
+    const picker = $('picker');
+    const canvas = $('canvas');
     const ctx = canvas.getContext('2d');
-    const nSlider = document.getElementById('n');
-    const sSlider = document.getElementById('s');
+    const controlsEl = $('controls');
+    const approxWrap = $('approx-wrap');
 
     let active = CONSTANTS[0];
 
-    CONSTANTS.forEach((c, i) => {
+    CONSTANTS.forEach((c) => {
       const b = document.createElement('button');
       b.innerHTML = `<span class="glyph">${c.glyph}</span>${c.name.replace(/\s*\(.*\)/, '')}`;
       b.onclick = () => select(c);
@@ -280,13 +484,64 @@
       picker.appendChild(b);
     });
 
+    function buildControls(c) {
+      controlsEl.innerHTML = '';
+      c.controls.forEach(ctrl => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        const label = document.createElement('label');
+        const valSpan = document.createElement('span');
+        valSpan.className = 'val';
+        valSpan.id = `val-${ctrl.key}`;
+        label.textContent = ctrl.label + ' ';
+        label.appendChild(valSpan);
+        row.appendChild(label);
+
+        const input = document.createElement('input');
+        input.type = 'range';
+        input.min = ctrl.min; input.max = ctrl.max; input.step = ctrl.step;
+        input.value = c.state[ctrl.key];
+        input.oninput = () => {
+          c.state[ctrl.key] = parseFloat(input.value);
+          render();
+        };
+        row.appendChild(input);
+
+        if (ctrl.presets) {
+          const pr = document.createElement('div');
+          pr.style.marginTop = '0.4rem';
+          ctrl.presets.forEach(p => {
+            const btn = document.createElement('button');
+            btn.className = 'tiny';
+            btn.textContent = p.label;
+            btn.onclick = () => {
+              c.state[ctrl.key] = p.val;
+              input.value = p.val;
+              render();
+            };
+            pr.appendChild(btn);
+          });
+          row.appendChild(pr);
+        }
+
+        if (ctrl.hint) {
+          const h = document.createElement('div');
+          h.className = 'hint';
+          h.textContent = ctrl.hint;
+          row.appendChild(h);
+        }
+        controlsEl.appendChild(row);
+      });
+    }
+
     function select(c) {
       active = c;
       document.querySelectorAll('#picker button').forEach(b =>
         b.classList.toggle('active', b.dataset.key === c.key));
-      document.getElementById('name').textContent = c.name;
-      document.getElementById('value').textContent = c.valueStr;
-      document.getElementById('blurb').innerHTML = `<p>${c.blurb}</p>`;
+      $('name').textContent = c.name;
+      $('value').textContent = 'true value: ' + c.valueStr;
+      $('blurb').innerHTML = `<p>${c.blurb}</p>`;
+      buildControls(c);
       render();
     }
 
@@ -302,17 +557,22 @@
     function render() {
       const r = canvas.getBoundingClientRect();
       ctx.clearRect(0, 0, r.width, r.height);
-      const n = parseInt(nSlider.value);
-      const s = parseFloat(sSlider.value);
-      document.getElementById('n-val').textContent = n;
-      document.getElementById('s-val').textContent = s.toFixed(2);
-      active.draw(ctx, r.width, r.height, n, s);
+      // update control value labels
+      active.controls.forEach(ctrl => {
+        const el = $(`val-${ctrl.key}`);
+        if (el) el.textContent = ctrl.format(active.state[ctrl.key]);
+      });
+      // approximation readout
+      const a = active.approx(active.state);
+      if (a) {
+        approxWrap.innerHTML = `<div class="approx"><div class="label">${a.label}</div><div class="num">${a.num}</div></div>`;
+      } else {
+        approxWrap.innerHTML = '';
+      }
+      active.draw(ctx, r.width, r.height, active.state);
     }
 
-    nSlider.oninput = render;
-    sSlider.oninput = render;
     window.addEventListener('resize', resize);
-
     select(CONSTANTS[0]);
     resize();
   </script>
