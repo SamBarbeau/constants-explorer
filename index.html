@@ -23,7 +23,8 @@
     .wrap { max-width: 980px; margin: 0 auto; padding: 2.5rem 1.25rem 3rem; }
     header.site { display: flex; align-items: center; justify-content: space-between;
       padding-bottom: 1.25rem; border-bottom: 1px solid var(--line); margin-bottom: 1.75rem; }
-    .brand { color: var(--ink); font-weight: 600; letter-spacing: 0.02em; }
+    .brand { color: var(--ink); font-weight: 600; letter-spacing: 0.02em; display: inline-flex; align-items: center; }
+    .brand img { height: 32px; width: auto; display: block; }
     .brand:hover { border-bottom-color: transparent; }
     nav.site a { margin-left: 1.25rem; font-size: 0.95rem; color: var(--muted); }
     nav.site a:hover, nav.site a.active { color: var(--ink); border-bottom-color: var(--ink); }
@@ -87,7 +88,7 @@
 <body>
   <div class="wrap">
     <header class="site">
-      <a href="https://sambarbeau.com" class="brand">Sam Barbeau</a>
+      <a href="https://sambarbeau.com" class="brand" aria-label="Sam Barbeau — home"><img src="img/page_logo.png" alt="Sam Barbeau"></a>
       <nav class="site">
         <a href="https://sambarbeau.com">about</a>
         <a href="https://sambarbeau.com/projects.html" class="active">projects</a>
