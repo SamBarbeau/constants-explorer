@@ -71,7 +71,7 @@ const experiments = [
     challenge:
       "Try 144°: five spokes. Then choose golden and add seeds. Notice the interlacing spirals without the empty rays. Other irrational angles can distribute seeds well, too.",
     caption:
-      "Each dot follows the same rule: angle = seed number × turn; radius ∝ √(seed number). Blue is your angle; the small reference uses the golden angle.",
+      "Each dot follows the same rule: angle = seed number × turn; radius ∝ √(seed number). The blue dots use your selected angle.",
     controls: [
       range(
         "angle",
@@ -99,31 +99,26 @@ const experiments = [
       ["golden angle", GOLDEN.toFixed(6) + "°"],
     ],
     draw(w, h, s) {
-      const seed = (cx, cy, r, angle, n, reference) => {
+      const seed = (cx, cy, r, angle, n) => {
         for (let i = 0; i < n; i++) {
           const a = (i * angle * Math.PI) / 180,
             d = r * Math.sqrt((i + 0.5) / n);
           circle(
             cx + d * Math.cos(a),
             cy + d * Math.sin(a),
-            reference ? 1 : Math.max(1.3, 3 - s.seeds / 600),
-            reference ? GREEN : BLUE,
+            Math.max(1.3, 3 - s.seeds / 600),
+            BLUE,
             true,
           );
         }
       };
       seed(
-        w * 0.46,
-        h * 0.48,
+        w * 0.5,
+        h * 0.5,
         Math.min(w * 0.39, h * 0.39),
         s.angle,
         s.seeds,
-        false,
       );
-      ctx.fillStyle = "#f5f4f1";
-      ctx.fillRect(w * 0.71, h * 0.68, w * 0.29, h * 0.32);
-      seed(w * 0.84, h * 0.81, Math.min(w, h) * 0.105, GOLDEN, 180, true);
-      label("golden", w * 0.84, h * 0.96, GREEN, "center");
       label(s.angle.toFixed(3) + "°", 22, 28, BLUE);
     },
   },
