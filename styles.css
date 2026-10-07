@@ -331,3 +331,45 @@ input:focus-visible {
   padding-top: 0;
   border: 0;
 }
+
+.experiment-question {
+  font-size: 1.12rem;
+  line-height: 1.35;
+  margin: 0 0 0.8rem;
+  font-weight: 500;
+}
+.discovery {
+  min-height: 3.3em;
+  font-size: 0.94rem;
+  margin: 0.8rem 0;
+  color: var(--ink);
+}
+.math-detail {
+  margin: 1rem 0;
+}
+.math-detail summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.math-detail .formula {
+  margin-top: 0.6rem;
+  font-size: 0.87rem;
+  overflow-wrap: anywhere;
+}
+.controls button.tiny[aria-pressed="true"] {
+  color: var(--ink);
+  border-color: var(--ink);
+  background: var(--card);
+}
+@media (max-width: 540px) {
+  header.site {
+    gap: 1rem;
+  }
+  nav.site a {
+    margin-left: 0.7rem;
+  }
+  .picker button {
+    font-size: 0.85rem;
+  }
+}

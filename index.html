@@ -1,54 +1,87 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png" />
-  <title>Constants · Sam Barbeau</title>
-  <meta name="description" content="An interactive visual tour of mathematical constants." />
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <div class="wrap">
-    <header class="site">
-      <a href="https://sambarbeau.com" class="brand" aria-label="Sam Barbeau — home"><img src="img/page_logo.png" alt="Sam Barbeau"></a>
-      <nav class="site">
-        <a href="https://sambarbeau.com">about</a>
-        <a href="https://sambarbeau.com/projects.html" class="active">projects</a>
-        <a href="https://sambarbeau.com/travel.html">travel</a>
-      </nav>
-    </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="img/apple-touch-icon.png"
+    />
+    <title>Constants · Sam Barbeau</title>
+    <meta
+      name="description"
+      content="An interactive visual tour of mathematical constants."
+    />
+    <link rel="stylesheet" href="styles.css?v=d0fe8e66a86e" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="site">
+        <a
+          href="https://sambarbeau.com"
+          class="brand"
+          aria-label="Sam Barbeau — home"
+          ><img src="img/page_logo.png" alt="Sam Barbeau"
+        /></a>
+        <nav class="site">
+          <a href="https://sambarbeau.com">about</a>
+          <a href="https://sambarbeau.com/projects.html" class="active"
+            >projects</a
+          >
+          <a href="https://sambarbeau.com/travel.html">travel</a>
+        </nav>
+      </header>
 
-    <main>
-      <h1>constants</h1>
-      <p class="lede">six numbers. six small experiments. move something, notice a pattern, find the idea.</p>
+      <main>
+        <h1>constants</h1>
+        <p class="lede">
+          famous numbers, small experiments. pull a circle straight, cut a sheet
+          in half, and see what stays the same.
+        </p>
 
-      <div class="picker" id="picker"></div>
+        <div class="picker" id="picker"></div>
 
-      <div class="layout">
-        <div>
-          <div class="stage"><canvas id="canvas" role="img" aria-label="Interactive mathematical diagram" aria-describedby="stage-caption"></canvas></div>
-          <div class="controls" id="controls"></div>
-          <div class="action-bar"><button id="play">Play experiment</button><button id="reset">Reset</button></div>
-          <p class="stage-caption" id="stage-caption"></p>
+        <div class="layout">
+          <div>
+            <h2 class="experiment-question" id="experiment-title"></h2>
+            <div class="stage">
+              <canvas
+                id="canvas"
+                role="img"
+                aria-label="Interactive mathematical diagram"
+                aria-describedby="stage-caption"
+              ></canvas>
+            </div>
+            <p class="discovery" id="discovery" role="status"></p>
+            <div class="controls" id="controls"></div>
+            <div class="action-bar">
+              <button id="play">Play experiment</button
+              ><button id="reset">Reset</button>
+            </div>
+            <p class="stage-caption" id="stage-caption"></p>
+          </div>
+          <div class="info">
+            <h2 id="name"></h2>
+            <div class="value" id="value"></div>
+            <div id="approx-wrap"></div>
+            <div id="blurb"></div>
+            <details class="math-detail">
+              <summary>The math behind it</summary>
+              <p class="formula" id="formula"></p>
+            </details>
+            <p class="try" id="try"></p>
+          </div>
         </div>
-        <div class="info">
-          <div class="experiment-title" id="experiment-title"></div>
-          <h2 id="name"></h2>
-          <div class="value" id="value"></div>
-          <div id="approx-wrap"></div>
-          <div id="blurb"></div>
-          <p class="formula" id="formula"></p>
-          <p class="try" id="try"></p>
+      </main>
 
-        </div>
-      </div>
-    </main>
+      <footer class="site">
+        <a href="https://github.com/SamBarbeau/constants-explorer">source</a> ·
+        <a href="https://dlmf.nist.gov/5.2#ii">reference: Euler’s constant</a>
+      </footer>
+    </div>
 
-    <footer class="site"><a href="https://github.com/SamBarbeau/constants-explorer">source</a> · <a href="https://dlmf.nist.gov/3.12">constant values</a></footer>
-  </div>
-
-  <script src="app.js" defer></script>
-</body>
+    <script src="app.js?v=a9edf290d718" defer></script>
+  </body>
 </html>
