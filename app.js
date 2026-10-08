@@ -63,85 +63,72 @@ const experiments = [
     short: "golden ratio",
     name: "The golden ratio",
     value: "1.6180339887…",
-    title: "Can a rectangle leave a smaller copy of itself?",
+    title: "One small turn. A whole field of seeds.",
     blurb:
-      "Cut a square off a rectangle. Usually, the leftover piece is a different shape. But at one particular proportion, you can turn that leftover piece and get a smaller copy of the rectangle you started with.\n\nThat proportion is the golden ratio. It is about 1.618 times as wide as it is tall. The same cut can happen again, and again.",
+      "The golden ratio has a reputation for pleasing proportions in art and design. Here, you can see it do something very specific: help spread dots around a circle.\n\nPlace a dot, turn a little, place the next dot slightly farther out. Keep using the same turn. At 90°, you return to the same four directions, so the dots pile up in spokes.\n\nSplit a full turn into two parts so the bigger part is φ times the smaller. That smaller turn is about 137.508°: the golden angle. It avoids lining up again at regular intervals, so new dots tend to land between earlier ones. Instead of a few crowded spokes, you get a much more even spread, with spirals appearing along the way.",
     formula:
-      "original: r · leftover, turned: 1/(r − 1) · match them: r = 1/(r − 1)",
+      "φ ≈ 1.618 · golden angle = 360° / φ² ≈ 137.508° · distance from center grows as √(dot number)",
     challenge:
-      "Try a wide rectangle, then a narrow one. Can you make the two outlines below line up? Use “golden ratio” to see the exact match.",
+      "Try 90° and 144°, then switch to “golden angle.” The outward spacing stays the same: only the turn changes. Other angles can spread dots well, too.",
     caption:
-      "The square comes off the left. Below, the original (blue) and the turned leftover (rust) are resized to the same height.",
+      "The golden ratio sets the turn between dots, not their spacing. Every option uses the same outward-spacing rule. The rust dot is the newest seed.",
     controls: [
       range(
-        "ratio",
-        "Width / height",
-        1.2,
-        2.2,
-        0.001,
-        1.8,
+        "angle",
+        "Turn between dots",
+        0,
+        180,
+        0.01,
+        360 / PHI ** 2,
         [
-          ["narrow", 1.3],
-          ["wide", 2],
-          ["golden ratio", PHI],
+          ["golden angle", 360 / PHI ** 2],
+          ["90°", 90],
+          ["137°", 137],
+          ["144°", 144],
         ],
-        (v) => v.toFixed(3),
+        (v) => v.toFixed(3) + "°",
       ),
+      range("seeds", "Dots", 1, 1000, 1, 500, [
+        ["20", 20],
+        ["100", 100],
+        ["500", 500],
+        ["1,000", 1000],
+      ]),
     ],
     readings: (s) => [
-      ["original shape", s.ratio.toFixed(4) + " : 1"],
-      ["leftover shape", (1 / (s.ratio - 1)).toFixed(4) + " : 1"],
+      ["turn between dots", s.angle.toFixed(3) + "°"],
+      ["dots placed", String(Math.round(s.seeds))],
     ],
     feedback: (s) =>
-      Math.abs(s.ratio - PHI) < 1e-9
-        ? "They match. Cut off another square and the same thing happens."
-        : Math.abs(s.ratio - PHI) < 0.003
-          ? "Almost a match. Choose “golden ratio” to land on it exactly."
-          : s.ratio < PHI
-            ? "The turned leftover is wider than the original. Make the original a little wider."
-            : "The turned leftover is narrower than the original. Make the original a little narrower.",
-    playLabel: "Find the match",
-    tour: { key: "ratio", values: [2, 1.3, 1.8, PHI] },
+      Math.abs(s.angle - 90) < 0.001
+        ? "Four directions, over and over. Adding dots makes the spokes longer."
+        : Math.abs(s.angle - 144) < 0.001
+          ? "Five dots bring you back to the same direction. That makes five spokes."
+          : Math.abs(s.angle - 360 / PHI ** 2) < 0.001
+            ? "No repeating set of spokes. Keep adding dots and watch the gaps fill in."
+            : "A small change in the turn can rearrange the entire pattern. Compare this with the golden angle.",
+    playLabel: "Grow the seed pattern",
+    tour: { key: "seeds", from: 1, to: 1000, integer: true },
     draw(w, h, s) {
-      const unit = Math.min((w - 55) / 2.2, h * 0.27),
-        x = (w - unit * s.ratio) / 2,
-        y = 38;
-      ctx.fillStyle = "#0369a118";
-      ctx.fillRect(x, y, unit, unit);
-      ctx.fillStyle = "#b5634222";
-      ctx.fillRect(x + unit, y, (s.ratio - 1) * unit, unit);
-      ctx.strokeStyle = INK;
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(x, y, s.ratio * unit, unit);
-      line(x + unit, y, x + unit, y + unit, INK, 1, [4, 3]);
-      label("square", x + unit / 2, y + unit / 2, BLUE, "center");
-      label(
-        "leftover",
-        x + unit + ((s.ratio - 1) * unit) / 2,
-        y + unit + 19,
-        RUST,
-        "center",
-      );
-      const other = 1 / (s.ratio - 1),
-        u = Math.min((w - 60) / Math.max(s.ratio, other), h * 0.25),
-        bx = (w - Math.max(s.ratio, other) * u) / 2,
-        by = h * 0.63;
-      label(
-        "turn the leftover; compare shapes",
-        w / 2,
-        h * 0.55,
-        MUTED,
-        "center",
-      );
-      ctx.fillStyle = "#0369a110";
-      ctx.fillRect(bx, by, s.ratio * u, u);
-      ctx.strokeStyle = BLUE;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(bx, by, s.ratio * u, u);
-      ctx.setLineDash([5, 4]);
-      ctx.strokeStyle = RUST;
-      ctx.strokeRect(bx, by, other * u, u);
-      ctx.setLineDash([]);
+      const n = Math.round(s.seeds),
+        r = Math.min(w, h) * 0.41,
+        cx = w / 2,
+        cy = h / 2;
+      // A fixed radial scale lets the pattern grow outward as seeds are added.
+      const spacing = r / Math.sqrt(1000),
+        size = Math.max(1.3, Math.min(2.4, spacing * 0.45));
+      for (let i = 0; i < n; i++) {
+        const a = (i * s.angle * Math.PI) / 180,
+          d = spacing * Math.sqrt(i + 0.5);
+        circle(
+          cx + d * Math.cos(a),
+          cy + d * Math.sin(a),
+          i === n - 1 ? size + 1 : size,
+          i === n - 1 ? RUST : BLUE,
+          true,
+        );
+      }
+      label(s.angle.toFixed(3) + "° per dot", 18, 25, BLUE);
     },
   },
   {
@@ -480,27 +467,27 @@ const experiments = [
     short: "Euler–Mascheroni",
     name: "The Euler–Mascheroni constant",
     value: "0.5772156649…",
-    title: "Can infinitely many scraps add up to something small?",
+    title: "The scraps get smaller. The total settles down.",
     blurb:
-      "Build a staircase with heights 1, ½, ⅓, ¼, and so on. Each step is one unit wide. Now slide the smooth curve 1/x underneath it.\n\nThe steps always sit a little above the curve. Those blue scraps keep getting smaller. Add all of them—even infinitely many—and their total area approaches just 0.57721. That is γ.",
+      "Build steps with heights 1, ½, ⅓, ¼, and so on, each one unit wide. Draw the smooth curve 1/x underneath them. The blue scraps are the little bits the steps leave above the curve.\n\nEvery new step adds another scrap, but a smaller one. Together, all those scraps approach a total area of 0.57721… That is γ.\n\nFollow the steps to the right. The close-up keeps zooming in so even the tiny scraps stay visible. Below it, the total uses a fixed scale: it barely moves once most of the area has already been collected.",
     formula: "scraps after n steps = (1 + ½ + … + 1/n) − ln(n + 1) → γ",
     challenge:
-      "Start with one step. Add a few more, then jump to 10,000. The staircase keeps going, but there is very little extra blue area left to collect.",
+      "Compare step 10 with step 1,000. The scraps still look big in the close-up—but check the zoom and the newest scrap’s actual area. That is why the total hardly changes.",
     caption:
-      "Blue is the extra area between the steps and the curve. The diagram shows the first 10 steps at a fixed scale; the total counts every step you add.",
+      "Above: a moving close-up of the latest six steps. The vertical scale enlarges as the scraps shrink. Below: all the area collected so far, on a fixed vertical scale. Each horizontal tick is 10 times more steps.",
     controls: [
       range(
         "power",
-        "Steps to add",
+        "Follow the steps",
         0,
         4,
         0.01,
         0,
         [
           ["1", 0],
-          ["2", Math.log10(2)],
           ["10", 1],
           ["100", 2],
+          ["1,000", 3],
           ["10,000", 4],
         ],
         (v) => Math.round(10 ** v).toLocaleString(),
@@ -509,58 +496,94 @@ const experiments = [
     readings: (s) => {
       const n = Math.round(10 ** s.power);
       return [
-        ["blue area so far", (harmonics[n] - Math.log(n + 1)).toFixed(6)],
-        [
-          "still to come",
-          (0.5772156649015329 - harmonics[n] + Math.log(n + 1)).toFixed(6),
-        ],
+        ["total blue area", (harmonics[n] - Math.log(n + 1)).toFixed(6)],
+        ["newest scrap", (1 / n - Math.log1p(1 / n)).toPrecision(3)],
       ];
     },
     feedback: (s) => {
       const n = Math.round(10 ** s.power);
       return n === 1
-        ? "The first scrap alone has area about 0.307—already more than half the final total."
-        : n < 10
-          ? `${n} steps, but each new scrap is smaller than the last.`
-          : `${n.toLocaleString()} steps counted. The picture stays zoomed in on the first 10; the blue total keeps inching toward γ.`;
+        ? "The very first scrap already gives you more than half the final total."
+        : n <= 6
+          ? "Each new step leaves a smaller scrap. Watch the total below grow."
+          : `Now looking at steps ${(n - 5).toLocaleString()}–${n.toLocaleString()}. The close-up enlarges the shrinking scraps; their actual area keeps getting smaller.`;
     },
-    playLabel: "Collect the scraps",
-    tour: { key: "power", values: [0, Math.log10(2), 1, 2, 4] },
+    playLabel: "Follow the shrinking scraps",
+    tour: { key: "power", from: 0, to: 4 },
     draw(w, h, s) {
       const n = Math.round(10 ** s.power),
-        count = Math.min(10, n),
-        X = (v) => 35 + ((v - 1) / 10) * (w - 57),
-        Y = (v) => h * 0.68 - v * h * 0.5;
-      line(35, Y(0), w - 22, Y(0));
-      for (let i = 1; i <= count; i++) {
+        start = Math.max(1, n - 5),
+        count = n - start + 1;
+      const low = 1 / (n + 1),
+        span = 1 / start - low,
+        zoom = 0.5 / span;
+      const left = 38,
+        right = w - 24,
+        top = 51,
+        bottom = h * 0.47;
+      const X = (x) => left + ((x - start) / count) * (right - left),
+        Y = (y) => bottom - ((y - low) / span) * (bottom - top);
+      label(
+        n === 1
+          ? "step 1"
+          : `steps ${start.toLocaleString()}–${n.toLocaleString()}`,
+        18,
+        23,
+        INK,
+      );
+      label(
+        `vertical zoom ×${zoom.toLocaleString(undefined, { maximumFractionDigits: 1 })}`,
+        18,
+        40,
+        MUTED,
+      );
+      for (let i = start; i <= n; i++) {
         const pts = [
           [X(i), Y(1 / i)],
           [X(i + 1), Y(1 / i)],
         ];
-        for (let j = 20; j >= 0; j--) {
-          const x = i + j / 20;
+        for (let j = 24; j >= 0; j--) {
+          const x = i + j / 24;
           pts.push([X(x), Y(1 / x)]);
         }
-        path(pts, "#0369a180", "#0369a138");
-        line(X(i), Y(0), X(i), Y(1 / i), LINE);
+        path(
+          pts,
+          i === n ? BLUE : "#0369a170",
+          i === n ? "#0369a14a" : "#0369a120",
+        );
       }
       const curve = [];
-      for (let i = 0; i <= 200; i++) {
-        const x = 1 + i / 20;
+      for (let j = 0; j <= 160; j++) {
+        const x = start + (count * j) / 160;
         curve.push([X(x), Y(1 / x)]);
       }
       path(curve, RUST);
-      for (const i of [1, 2, 5, 10])
-        label(String(i), X(i), Y(0) + 20, MUTED, "center");
-      label("height 1", 35, 25, BLUE);
-      label("curve: 1/x", w - 22, 25, RUST, "right");
-      const total = harmonics[n] - Math.log(n + 1),
-        barY = h * 0.88,
-        bw = w - 74;
-      line(37, barY, 37 + bw, barY, LINE, 7);
-      line(37, barY, 37 + (bw * total) / 0.5772156649015329, barY, BLUE, 7);
-      label("0", 37, barY + 23);
-      label("γ ≈ 0.577", w - 37, barY + 23, MUTED, "right");
+      label(String(start), left, bottom + 18, MUTED, "left");
+      label(String(n + 1), right, bottom + 18, MUTED, "right");
+      label("total blue area", 18, h * 0.64, BLUE);
+      const gx = (k) => left + (Math.log10(k) / 4) * (right - left),
+        gy = (v) => h * 0.89 - ((v - 0.28) / 0.32) * (h * 0.19),
+        GAMMA = 0.5772156649015329;
+      line(left, gy(0.3), right, gy(0.3), LINE);
+      label("0.3", left - 6, gy(0.3) + 4, MUTED, "right");
+      line(left, gy(GAMMA), right, gy(GAMMA), MUTED, 1, [3, 3]);
+      label("γ", left - 6, gy(GAMMA) + 4, INK, "right");
+      const total = [];
+      for (let i = 1; i <= n; i++) {
+        if (i > 80 && i !== n && i % Math.max(1, Math.floor(n / 250)) !== 0)
+          continue;
+        total.push([gx(i), gy(harmonics[i] - Math.log(i + 1))]);
+      }
+      path(total, BLUE);
+      circle(gx(n), gy(harmonics[n] - Math.log(n + 1)), 3.5, BLUE, true);
+      for (const k of [1, 10, 100, 1000, 10000])
+        label(
+          k === 1000 ? "1k" : k === 10000 ? "10k" : String(k),
+          gx(k),
+          h - 0.025 * h,
+          MUTED,
+          k === 1 ? "left" : k === 10000 ? "right" : "center",
+        );
     },
   },
 ];
@@ -721,6 +744,7 @@ $("play").onclick = () => {
           Math.min(tour.values.length - 1, Math.floor(t * tour.values.length))
         ]
       : tour.from + (tour.to - tour.from) * t;
+    if (tour.integer) active.state[c.key] = Math.round(active.state[c.key]);
     $("control-" + c.key).value = active.state[c.key];
     render();
     if (t < 1) animation = requestAnimationFrame(frame);

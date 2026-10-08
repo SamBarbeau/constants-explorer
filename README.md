@@ -10,12 +10,12 @@ Preview standalone with `python3 -m http.server 8001`, or use the sibling person
 
 ## Experiments
 
-- φ: remove a square and compare the turned remainder with the original rectangle.
+- φ: place seeds using a fixed turn and square-root outward spacing. Compare golden-angle spirals with 90° and 144° spokes; playback grows from 1 to 1,000 dots.
 - π: straighten a circle’s edge without changing its length; measure it in diameters.
 - e: collect interest through a year, including the $1 → $1.50 → $2.25 example.
 - √2: compare a sheet with a turned half-sheet at the same height.
 - τ: connect a rotating point to the sine wave made by its height.
-- γ: accumulate the area between the harmonic staircase and 1/x. The drawing stays at the first ten steps; the sum counts up to 10,000. This uses H_n − ln(n+1), which approaches the same Euler–Mascheroni constant as H_n − ln(n), since ln(n+1) − ln(n) tends to zero. Reference: https://dlmf.nist.gov/5.2#E3.
+- γ: accumulate the area between the harmonic staircase and 1/x. A moving, vertically magnified window follows the newest six steps up to 10,000; a fixed-scale plot shows the accumulated area approaching its limit. The latest scrap is computed with 1/n − log1p(1/n). This uses H_n − ln(n+1), which approaches the same Euler–Mascheroni constant as H_n − ln(n), since ln(n+1) − ln(n) tends to zero. Reference: https://dlmf.nist.gov/5.2#E3.
 
 Equations are optional disclosures. Contextual feedback explains what changed after an interaction. All diagrams render only on input, resize, or explicit playback. No extra runtime libraries were added.
 
