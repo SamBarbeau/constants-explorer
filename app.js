@@ -63,15 +63,11 @@ const experiments = [
     short: "golden ratio",
     name: "The golden ratio",
     value: "1.6180339887…",
-    title: "One small turn. A whole field of seeds.",
-    blurb:
-      "The golden ratio has a reputation for pleasing proportions in art and design. Here, you can see it do something very specific: help spread dots around a circle.\n\nPlace a dot, turn a little, place the next dot slightly farther out. Keep using the same turn. At 90°, you return to the same four directions, so the dots pile up in spokes.\n\nSplit a full turn into two parts so the bigger part is φ times the smaller. That smaller turn is about 137.508°: the golden angle. It avoids lining up again at regular intervals, so new dots tend to land between earlier ones. Instead of a few crowded spokes, you get a much more even spread, with spirals appearing along the way.",
+    title: "Why do some turns make spokes?",
+    blurb: "Place each dot a little farther from the center. A quarter turn puts every fifth dot back on the same spoke.\n\nNow split a full turn in the golden ratio: the larger part is φ times the smaller. Turn by the smaller part (about 137.5°) each time, and the dots fill the gaps.",
     formula:
       "φ ≈ 1.618 · golden angle = 360° / φ² ≈ 137.508° · distance from center grows as √(dot number)",
-    challenge:
-      "Try 90° and 144°, then switch to “golden angle.” The outward spacing stays the same: only the turn changes. Other angles can spread dots well, too.",
-    caption:
-      "The golden ratio sets the turn between dots, not their spacing. Every option uses the same outward-spacing rule. The rust dot is the newest seed.",
+    caption: "The orange dot is the newest. Switch between 90° and the golden angle.",
     controls: [
       range(
         "angle",
@@ -101,12 +97,12 @@ const experiments = [
     ],
     feedback: (s) =>
       Math.abs(s.angle - 90) < 0.001
-        ? "Four directions, over and over. Adding dots makes the spokes longer."
+        ? "90° makes four spokes."
         : Math.abs(s.angle - 144) < 0.001
-          ? "Five dots bring you back to the same direction. That makes five spokes."
+          ? "After five turns of 144°, the direction repeats."
           : Math.abs(s.angle - 360 / PHI ** 2) < 0.001
-            ? "No repeating set of spokes. Keep adding dots and watch the gaps fill in."
-            : "A small change in the turn can rearrange the entire pattern. Compare this with the golden angle.",
+            ? "The golden angle fills the gaps between earlier dots."
+            : "Move the angle slightly and watch the pattern change.",
     playLabel: "Grow the seed pattern",
     tour: { key: "seeds", from: 1, to: 1000, integer: true },
     draw(w, h, s) {
@@ -137,14 +133,10 @@ const experiments = [
     short: "pi",
     name: "Pi",
     value: "3.1415926535…",
-    title: "How much string goes around a circle?",
-    blurb:
-      "Wrap a piece of string around a circle, then pull it straight. It is a little longer than three trips across the circle.\n\nExactly how much longer? About 3.14159 diameters. That number is π. A coin, a dinner plate, a planet: the circle can change size, but this ratio does not.",
+    title: "How far around is a circle?",
+    blurb: "A diameter goes straight across a circle through its center. A string wrapped once around the edge measures just over three diameters. The exact number of diameters is π, whatever the size of the circle.",
     formula: "distance around = π × diameter",
-    challenge:
-      "Straighten the string and count the diameter-length sections. Then change the circle’s size. The extra bit is always about 0.142 of a diameter.",
-    caption:
-      "Blue is the string around the circle. The ruler below measures in diameters of the original circle, not centimeters.",
+    caption: "Each tick on the ruler marks one diameter.",
     controls: [
       range(
         "unwrap",
@@ -180,8 +172,8 @@ const experiments = [
     ],
     feedback: (s) =>
       s.unwrap > 0.98
-        ? "Three full diameters, plus a little extra. That is π."
-        : "The string bends, but its length stays the same. Pull it straight to measure it.",
+        ? "The string reaches about 0.14 diameters past the third tick."
+        : "Straighten the string to measure it.",
     playLabel: "Unwrap the circle",
     tour: { key: "unwrap", from: 0, to: 1 },
     draw(w, h, s) {
@@ -223,14 +215,10 @@ const experiments = [
     short: "Euler’s number",
     name: "Euler’s number",
     value: "2.7182818284…",
-    title: "Can more frequent growth make you infinitely rich?",
-    blurb:
-      "Start with $1 and a made-up deal: 100% interest over a year. Pay it once at the end and you have $2. Pay half the rate halfway through, then half again at the end, and you have $2.25. The second payment earns interest on the first one, too.\n\nMore frequent payments help, but they do not make the total grow forever. Even with nonstop compounding, that first dollar becomes only about $2.71828. That limit is e.",
+    title: "How much can $1 grow in a year?",
+    blurb: "Start with $1 at 100% annual interest. One payment doubles it. Two 50% payments give you $2.25 because the second earns interest on the first. Split the rate into ever smaller payments and the final balance approaches e dollars.",
     formula: "after n payments: (1 + 1/n)ⁿ · the limit is e",
-    challenge:
-      "Choose “twice” and play through the year. The first payment adds $0.50; the second adds $0.75. Then compare monthly and daily payments.",
-    caption:
-      "Blue shows your balance. Each step is an interest payment. The faint rust curve shows nonstop growth for comparison.",
+    caption: "Blue steps show interest payments. The orange curve shows continuous growth.",
     controls: [
       range("n", "Payments per year", 1, 365, 1, 2, [
         ["once", 1],
@@ -263,12 +251,12 @@ const experiments = [
     feedback: (s) => {
       const k = Math.min(s.n, Math.floor(s.time * s.n + 1e-8));
       return k === 0
-        ? "You start with $1. Move through the year to collect a payment."
+        ? "Starting balance: $1."
         : s.n === 2
           ? k === 1
-            ? "First payment: 50% of $1 is $0.50. You now have $1.50."
-            : "Second payment: 50% of $1.50 is $0.75. You end with $2.25."
-          : `${k} of ${s.n} payments received. At year’s end: $${((1 + 1 / s.n) ** s.n).toFixed(4)}. Even more payments cannot take this deal past e.`;
+            ? "First payment: $0.50 on your starting dollar."
+            : "Second payment: $0.75, because you now earn interest on $1.50."
+          : `${k} of ${s.n} payments received. At year’s end: $${((1 + 1 / s.n) ** s.n).toFixed(4)}.`;
     },
     playLabel: "Play through the year",
     tour: { key: "time", from: 0, to: 1 },
@@ -305,14 +293,10 @@ const experiments = [
     short: "root two",
     name: "The square root of two",
     value: "1.4142135623…",
-    title: "Why does a half-sheet still look like a sheet?",
-    blurb:
-      "Cut a sheet of paper in half across its long side. Turn one half sideways. Can it have the same shape as the whole sheet?\n\nYes—if the long side is √2 times the short side. That is why A4 and A5 paper have the same proportions. The sizes change, but the shape stays familiar.",
+    title: "What shape of paper keeps its proportions when cut in half?",
+    blurb: "Cut across the middle of the long side, then turn one half sideways. If the original sheet was √2 times as long as it was wide, the half has the same ratio. That’s the idea behind A4 and A5 paper.",
     formula: "original: r · half-sheet, turned: 2/r · a match needs r² = 2",
-    challenge:
-      "Try 16:9, the shape of many screens. Its half is almost square. Now try √2: the two outlines below fit each other.",
-    caption:
-      "The dashed line cuts the sheet in half. Below, the whole sheet (blue) and a turned half (rust) have the same height so you can compare their shapes.",
+    caption: "Blue: whole sheet. Orange: rotated half. Both outlines are scaled to the same height.",
     controls: [
       range(
         "ratio",
@@ -336,11 +320,11 @@ const experiments = [
     ],
     feedback: (s) =>
       Math.abs(s.ratio - Math.SQRT2) < 1e-9
-        ? "Same shape, half the paper. You can keep halving it."
+        ? "The outlines match: half the area, same proportions."
         : Math.abs(s.ratio - Math.SQRT2) < 0.003
           ? "Nearly the same shape. Choose √2 for the exact match."
-          : "The rust outline is a turned half-sheet. Change the width until its right edge meets the blue one.",
-    playLabel: "Find the paper shape",
+          : "Adjust the width until the two right edges line up.",
+    playLabel: "Match the outlines",
     tour: { key: "ratio", seekFromCurrent: true, to: Math.SQRT2, duration: 3200 },
     draw(w, h, s) {
       const u = Math.min((w - 60) / 2, h * 0.26),
@@ -377,14 +361,10 @@ const experiments = [
     short: "tau",
     name: "Tau: one whole turn",
     value: "6.2831853071…",
-    title: "How does a spinning point make a wave?",
-    blurb:
-      "Imagine watching one seat on a Ferris wheel from the side. As it goes around, its height rises, falls, and comes back to where it started. Plot that height over time and you get a sine wave.\n\nOne trip around is one full wave. In radians—the angle unit based on distance around a circle—that full turn is τ. It is exactly twice π.",
+    title: "How does a spinning wheel draw a wave?",
+    blurb: "Track the height of a Ferris wheel seat as it turns at a steady speed. One lap draws one sine wave, from the middle to the top, down to the bottom, and back. That full turn measures τ radians.",
     formula: "one turn = τ radians = 2π radians = 360°",
-    challenge:
-      "Play one turn. Pause at the top or bottom: those are the wave’s peak and trough. Halfway around is not halfway up—it is back at the middle.",
-    caption:
-      "The blue point goes around the wheel. The rust point records its height. The dashed line connects two points at exactly the same height.",
+    caption: "The dashed line connects the seat to its height on the graph.",
     controls: [
       range(
         "turn",
@@ -414,16 +394,16 @@ const experiments = [
     ],
     feedback: (s) =>
       s.turn < 0.02
-        ? "Start at the middle, on the right side of the wheel."
+        ? "The seat starts level with the center."
         : s.turn > 0.98
-          ? "Back where you started. One full turn has drawn one full wave."
+          ? "One full turn completes the wave."
           : Math.abs(s.turn - 0.25) < 0.015
-            ? "At the very top: the wave reaches +1."
+            ? "At the top: height +1."
             : Math.abs(s.turn - 0.75) < 0.015
-              ? "At the very bottom: the wave reaches −1."
+              ? "At the bottom: height −1."
               : Math.abs(s.turn - 0.5) < 0.015
-                ? "Halfway around: back at height 0, now moving downward."
-                : "The wheel turns at a steady speed, but its height does not change at a steady speed.",
+                ? "Half a turn: back at zero, moving down."
+                : "Height changes fastest near the middle.",
     playLabel: "Play one turn",
     tour: { key: "turn", from: 0, to: 1 },
     draw(w, h, s) {
@@ -467,14 +447,10 @@ const experiments = [
     short: "Euler–Mascheroni",
     name: "The Euler–Mascheroni constant",
     value: "0.5772156649…",
-    title: "The scraps get smaller. The total settles down.",
-    blurb:
-      "Build steps with heights 1, ½, ⅓, ¼, and so on, each one unit wide. Draw the smooth curve 1/x underneath them. The blue scraps are the little bits the steps leave above the curve.\n\nEvery new step adds another scrap, but a smaller one. Together, all those scraps approach a total area of 0.57721… That is γ.\n\nFollow the steps to the right. The close-up keeps zooming in so even the tiny scraps stay visible. Below it, the total uses a fixed scale: it barely moves once most of the area has already been collected.",
-    formula: "scraps after n steps = (1 + ½ + … + 1/n) − ln(n + 1) → γ",
-    challenge:
-      "Compare step 10 with step 1,000. The scraps still look big in the close-up—but check the zoom and the newest scrap’s actual area. That is why the total hardly changes.",
-    caption:
-      "Above: a moving close-up of the latest six steps. The vertical scale enlarges as the scraps shrink. Below: all the area collected so far, on a fixed vertical scale. Each horizontal tick is 10 times more steps.",
+    title: "How much area sits between the steps and the curve?",
+    blurb: "Make a staircase with steps one unit wide and heights 1, ½, ⅓, and so on. Each step leaves a sliver above the curve 1/x. The slivers get smaller, and their total area approaches γ.",
+    formula: "area after n steps = (1 + ½ + … + 1/n) − ln(n + 1) → γ",
+    caption: "Top: the newest slivers, magnified. Bottom: total area on a fixed scale. Each tick to the right means ten times as many steps.",
     controls: [
       range(
         "power",
@@ -497,18 +473,18 @@ const experiments = [
       const n = Math.round(10 ** s.power);
       return [
         ["total blue area", (harmonics[n] - Math.log(n + 1)).toFixed(6)],
-        ["newest scrap", (1 / n - Math.log1p(1 / n)).toPrecision(3)],
+        ["newest sliver", (1 / n - Math.log1p(1 / n)).toPrecision(3)],
       ];
     },
     feedback: (s) => {
       const n = Math.round(10 ** s.power);
       return n === 1
-        ? "The very first scrap already gives you more than half the final total."
+        ? "The first sliver accounts for over half the total."
         : n <= 6
-          ? "Each new step leaves a smaller scrap. Watch the total below grow."
-          : `Now looking at steps ${(n - 5).toLocaleString()}–${n.toLocaleString()}. The close-up enlarges the shrinking scraps; their actual area keeps getting smaller.`;
+          ? "Each step adds a smaller sliver."
+          : `Steps ${(n - 5).toLocaleString()}–${n.toLocaleString()}. Compare the newest sliver with the total.`;
     },
-    playLabel: "Follow the shrinking scraps",
+    playLabel: "Add steps",
     tour: { key: "power", from: 0, to: 4 },
     draw(w, h, s) {
       const n = Math.round(10 ** s.power),
@@ -634,7 +610,6 @@ function select(e) {
   );
   $("play").textContent = e.playLabel;
   $("formula").textContent = e.formula;
-  $("try").textContent = e.challenge;
   $("stage-caption").textContent = e.caption;
   canvas.setAttribute("aria-label", e.name + " — " + e.caption);
   $("controls").replaceChildren();
