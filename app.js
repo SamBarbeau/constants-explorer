@@ -339,9 +339,9 @@ const experiments = [
         ? "Same shape, half the paper. You can keep halving it."
         : Math.abs(s.ratio - Math.SQRT2) < 0.003
           ? "Nearly the same shape. Choose √2 for the exact match."
-          : "The outlines do not match. Halving this sheet changes its proportions.",
+          : "The rust outline is a turned half-sheet. Change the width until its right edge meets the blue one.",
     playLabel: "Find the paper shape",
-    tour: { key: "ratio", values: [2, 1, 16 / 9, Math.SQRT2] },
+    tour: { key: "ratio", seekFromCurrent: true, to: Math.SQRT2, duration: 3200 },
     draw(w, h, s) {
       const u = Math.min((w - 60) / 2, h * 0.26),
         x = (w - s.ratio * u) / 2,
@@ -594,7 +594,8 @@ for (let n = 1; n < harmonics.length; n++)
 let active,
   animation = 0,
   started = 0,
-  animationProgress = 0;
+  animationProgress = 0,
+  tourStart = 0;
 for (const e of experiments) {
   e.state = Object.fromEntries(e.controls.map((c) => [c.key, c.value]));
   const b = document.createElement("button");
@@ -732,18 +733,19 @@ $("play").onclick = () => {
   const tour = active.tour;
   const c = active.controls.find((c) => c.key === tour.key);
   if (animationProgress >= 1) animationProgress = 0;
-  started = performance.now() - animationProgress * 8000;
+  const duration = tour.duration || 8000;
+  if (animationProgress === 0) {
+    tourStart = tour.seekFromCurrent ? active.state[c.key] : tour.from;
+    // Replay from a visibly different sheet if the outlines already match.
+    if (tour.seekFromCurrent && Math.abs(tourStart - tour.to) < 0.003) tourStart = c.max;
+  }
+  started = performance.now() - animationProgress * duration;
   $("play").textContent = "Pause";
   const frame = (now) => {
-    const t = Math.min(1, (now - started) / 8000);
+    const t = Math.max(0, Math.min(1, (now - started) / duration));
     animationProgress = t;
-    // A small set of useful comparisons, or one complete physical action.
-    // Preserve exact preset values such as √2 and φ at the end.
-    active.state[c.key] = tour.values
-      ? tour.values[
-          Math.min(tour.values.length - 1, Math.floor(t * tour.values.length))
-        ]
-      : tour.from + (tour.to - tour.from) * t;
+    const fraction = tour.seekFromCurrent ? t * t * (3 - 2 * t) : t;
+    active.state[c.key] = t === 1 ? tour.to : tourStart + (tour.to - tourStart) * fraction;
     if (tour.integer) active.state[c.key] = Math.round(active.state[c.key]);
     $("control-" + c.key).value = active.state[c.key];
     render();
