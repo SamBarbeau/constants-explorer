@@ -152,19 +152,6 @@ const experiments = [
         ],
         (v) => Math.round(v * 100) + "%",
       ),
-      range(
-        "size",
-        "Circle size",
-        0.6,
-        1,
-        0.01,
-        1,
-        [
-          ["small", 0.6],
-          ["large", 1],
-        ],
-        (v) => Math.round(v * 100) + "%",
-      ),
     ],
     readings: (s) => [
       ["string length", "3.14159 diameters"],
@@ -177,7 +164,7 @@ const experiments = [
     playLabel: "Unwrap the circle",
     tour: { key: "unwrap", from: 0, to: 1 },
     draw(w, h, s) {
-      const r = ((w - 62) / TAU) * s.size,
+      const r = (w - 62) / TAU,
         L = TAU * r,
         k = (1 - s.unwrap) / r,
         base = h * 0.64;
