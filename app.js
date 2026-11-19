@@ -610,6 +610,7 @@ function select(e) {
   );
   $("play").textContent = e.playLabel;
   $("formula").textContent = e.formula;
+  $("gamma-reference").hidden = e.key !== "gamma";
   $("stage-caption").textContent = e.caption;
   canvas.setAttribute("aria-label", e.name + " — " + e.caption);
   $("controls").replaceChildren();

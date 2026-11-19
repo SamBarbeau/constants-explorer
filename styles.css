@@ -218,14 +218,6 @@ canvas {
   border-color: var(--muted);
 }
 
-footer.site {
-  margin-top: 2.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--line);
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
 .stage {
   aspect-ratio: 1;
   border-radius: 8px;
